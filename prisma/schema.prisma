@@ -1,0 +1,137 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Bot {
+  id              String        @id @default(cuid())
+  name            String
+  bankroll        Float
+  initialBankroll Float
+  status          String        @default("active")
+  maxKelly        Float         @default(0.05)
+  minEdge         Float         @default(0.05)
+  sports          String        @default("soccer,tennis,basketball")
+  systemPrompt    String
+  enableCombined  Boolean       @default(false)
+  alsoIndividual  Boolean       @default(false)
+  maxComboLegs    Int           @default(2)
+  lastRunAt       DateTime?
+  createdAt       DateTime      @default(now())
+  bets            Bet[]
+  combinedBets    CombinedBet[]
+  matchAnalyses   MatchAnalysis[]
+}
+
+model Bet {
+  id            String    @id @default(cuid())
+  botId         String
+  bot           Bot       @relation(fields: [botId], references: [id])
+  matchId       String
+  sport         String
+  sportKey      String
+  league        String
+  homeTeam      String
+  awayTeam      String
+  pick          String
+  odds          Float
+  estimatedProb Float
+  edge          Float
+  stake         Float
+  reasoning     String
+  status        String    @default("pending")
+  profit        Float?
+  matchDate     DateTime
+  createdAt     DateTime  @default(now())
+  resolvedAt    DateTime?
+}
+
+model OddsCache {
+  sportKey  String   @id
+  data      String
+  fetchedAt DateTime
+}
+
+model ScoresCache {
+  sportKey  String   @id
+  data      String
+  fetchedAt DateTime
+}
+
+model ApiStats {
+  id                    String   @id @default("singleton")
+  oddsRequestsUsed      Int      @default(0)
+  oddsRequestsRemaining Int      @default(500)
+  claudeRequests        Int      @default(0)
+  claudeInputTokens     Int      @default(0)
+  claudeOutputTokens    Int      @default(0)
+  claudeCacheReadTokens Int      @default(0)
+  updatedAt             DateTime @default(now())
+}
+
+model LLMCallLog {
+  id           String   @id @default(cuid())
+  model        String
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  success      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model CombinedBet {
+  id            String           @id @default(cuid())
+  botId         String
+  bot           Bot              @relation(fields: [botId], references: [id])
+  legs          CombinedBetLeg[]
+  combinedOdds  Float
+  estimatedProb Float
+  edge          Float
+  stake         Float
+  status        String           @default("pending")
+  profit        Float?
+  createdAt     DateTime         @default(now())
+  resolvedAt    DateTime?
+}
+
+model CombinedBetLeg {
+  id            String      @id @default(cuid())
+  combinedBetId String
+  combinedBet   CombinedBet @relation(fields: [combinedBetId], references: [id])
+  matchId       String
+  sportKey      String
+  league        String
+  homeTeam      String
+  awayTeam      String
+  matchDate     DateTime
+  pick          String
+  odds          Float
+  estimatedProb Float
+  status        String      @default("pending")
+}
+
+model OddsApiCallLog {
+  id        String   @id @default(cuid())
+  success   Boolean
+  createdAt DateTime @default(now())
+}
+
+model MatchAnalysis {
+  id            String   @id @default(cuid())
+  botId         String
+  bot           Bot      @relation(fields: [botId], references: [id])
+  matchId       String
+  decision      String
+  pick          String?
+  odds          Float
+  estimatedProb Float
+  edge          Float
+  reasoning     String
+  oddsHash      String
+  matchDate     DateTime
+  analyzedAt    DateTime @default(now())
+
+  @@unique([botId, matchId])
+}

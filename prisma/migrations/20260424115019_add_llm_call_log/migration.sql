@@ -1,0 +1,9 @@
+-- CreateTable
+CREATE TABLE "LLMCallLog" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "model" TEXT NOT NULL,
+    "inputTokens" INTEGER NOT NULL DEFAULT 0,
+    "outputTokens" INTEGER NOT NULL DEFAULT 0,
+    "success" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
